@@ -106,7 +106,7 @@ class Atom(StateBase):
     def cycles(self, max_depth=8):
         def rec(path):
             for next in path[-1].bonded_neighbors:
-                if next is self:
+                if next is self and len(path) > 2:
                     yield path
                 if next not in path and len(path) < max_depth:
                     yield from rec(path + (next,))
