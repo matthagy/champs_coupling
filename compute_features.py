@@ -1,44 +1,55 @@
+import os
+import os.path
 import pickle
+import traceback
 from collections import deque
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 
 from state import Molecule, Atom, Bond, length, distance
+from util import mp_map_parititons
 
 
 def main():
-    print('loading molecules')
-    with open('data/molecules.p', 'rb') as fp:
-        molecules = pickle.load(fp)
-    molecules_by_name = {m.name: m for m in molecules}
-
-    compute_features('train', molecules_by_name)
-    compute_features('test', molecules_by_name)
+    mp_map_parititons(process_partition)
 
 
-def compute_features(name, molecules_by_name):
-    print('computing features for', name)
-    data = pd.read_csv(f'data/{name}.csv')
+def process_partition(index):
+    try:
+        with open(f'data/partitions/molecules/{index}.p', 'rb') as fp:
+            molecules = pickle.load(fp)
+        molecules_by_name = {m.name: m for m in molecules}
 
+        compute_features('train', index, molecules_by_name)
+        compute_features('test', index, molecules_by_name)
+    except Exception:
+        traceback.print_exc()
+        raise
+
+
+def compute_features(name, index, molecules_by_name):
+    data = pd.read_pickle(f'data/partitions/{name}/{index}.p')
     for coupling_type, type_df in data.groupby('type'):
-        print('coupling', coupling_type)
-
         type_df = type_df.sort_values('id')
 
-        with tqdm(total=len(type_df)) as t:
-            with open(f'data/features_{name}_{coupling_type}.p', 'wb') as fp:
-                for _, row in type_df.iterrows():
-                    t.update()
+        acc_features = []
+        for _, row in type_df.iterrows():
+            molecule: Molecule = molecules_by_name[row['molecule_name']]
+            features = compute_pair_features(row, molecule)
+            features['id'] = row['id']
+            try:
+                features['scalar_coupling_constant'] = row['scalar_coupling_constant']
+            except KeyError:
+                pass
+            acc_features.append(features)
+        acc_features = pd.DataFrame(acc_features)
 
-                    molecule_name = row['molecule_name']
-                    molecule: Molecule = molecules_by_name[molecule_name]
-
-                    features = compute_pair_features(row, molecule)
-                    features['id'] = row['id']
-
-                    pickle.dump(features, fp, pickle.HIGHEST_PROTOCOL)
+        path = f'data/partitions/features/{name}/{coupling_type}/{index}.p'
+        dr = os.path.dirname(path)
+        if not os.path.exists(dr):
+            os.makedirs(dr, exist_ok=True)
+        acc_features.to_pickle(path)
 
 
 def compute_pair_features(row: pd.Series,
@@ -46,7 +57,7 @@ def compute_pair_features(row: pd.Series,
     a0: Atom = molecule.atoms[row['atom_index_0']]
     a1: Atom = molecule.atoms[row['atom_index_1']]
 
-    features = {'distance': distance(a0, a1),
+    features = {'distance': distance(a0.position, a1.position),
                 'molecular_weight': molecule.molecular_weight,
                 'a0_bonds': a0.n_bonds,
                 'a1_bonds': a1.n_bonds}
