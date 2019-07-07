@@ -71,14 +71,14 @@ class Atom(StateBase):
         self.bonds = []
 
     def __str__(self):
-        return self.hybrdized_symbol
+        return self.hybridized_symbol
 
     @property
     def n_bonds(self):
         return len(self.bonds)
 
     @property
-    def hybrdized_symbol(self):
+    def hybridized_symbol(self):
         return self.atom_type.symbol + str(self.n_bonds)
 
     @property
@@ -88,7 +88,7 @@ class Atom(StateBase):
 
     @property
     def bonded_neighbors_count(self):
-        return Counter(a.hybrdized_symbol for a in self.bonded_neighbors)
+        return Counter(a.hybridized_symbol for a in self.bonded_neighbors)
 
     @property
     def secondary_neighbors(self):
@@ -99,7 +99,7 @@ class Atom(StateBase):
 
     @property
     def secondary_bonded_neighbors_count(self):
-        return Counter((a1.hybrdized_symbol, a2.hybrdized_symbol)
+        return Counter((a1.hybridized_symbol, a2.hybridized_symbol)
                        for a1, a2 in self.secondary_neighbors)
 
     @property
@@ -163,5 +163,5 @@ class Molecule(StateBase):
     @property
     def hybridized_signature(self):
         return ','.join(f'{s}_{n}' for s, n in
-                        sorted(Counter(a.hybrdized_symbol for a in self.atoms)
+                        sorted(Counter(a.hybridized_symbol for a in self.atoms)
                                .items()))

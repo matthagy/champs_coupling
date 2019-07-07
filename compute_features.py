@@ -2,7 +2,7 @@ import os
 import os.path
 import pickle
 import traceback
-from collections import deque
+from collections import deque, Counter
 
 import numpy as np
 import pandas as pd
@@ -61,6 +61,14 @@ def compute_pair_features(row: pd.Series,
                 'molecular_weight': molecule.molecular_weight,
                 'a0_bonds': a0.n_bonds,
                 'a1_bonds': a1.n_bonds}
+
+    for prefix, atom in [('a0', a0), ('a1', a1)]:
+        features[prefix + '_bonds'] = atom.n_bonds
+
+        cycles = Counter(','.join([a.hybridized_symbol for a in cycle])
+                         for cycle in atom.cycles)
+        for cycle, n in cycles.items():
+            features[prefix + '_cyc_' + cycle] += 1
 
     for prefix, bonds in [('b0', a0.bonded_neighbors_count),
                           ('b1', a1.bonded_neighbors_count)]:

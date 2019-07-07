@@ -19,7 +19,7 @@ def compute_neighbors_for_molecule(m: Molecule):
             atom_distances[i, j] = d
             atom_distances[j, i] = d
 
-    atom_types = [a.hybrdized_symbol for a in m.atoms]
+    atom_types = [a.hybridized_symbol for a in m.atoms]
     di, dj = np.where((atom_distances > 0) & (atom_distances < 1.5))
     neighbor_counts = defaultdict(Counter)
     for i, j in zip(di, dj):
