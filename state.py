@@ -83,7 +83,8 @@ class Atom:
     def secondary_neighbors(self):
         for neighbor1 in self.bonded_neighbors:
             for neighbor2 in neighbor1.bonded_neighbors:
-                yield neighbor1, neighbor2
+                if neighbor2 is not self:
+                    yield neighbor1, neighbor2
 
     @property
     def secondary_bonded_neighbors_count(self):
