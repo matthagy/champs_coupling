@@ -26,11 +26,7 @@ def load_partitions(name, coupling_type):
         axis=0).fillna(0.0).set_index('id')
 
 
-def process_coupling_type(coupling_type):
-    train = load_partitions('train', coupling_type)
-    y_train = train['scalar_coupling_constant']
-    X_train = train.drop(['scalar_coupling_constant'], axis=1)
-
+def train_model(X_train, y_train):
     model = RandomForestRegressor(
         n_estimators=50,
         criterion='mse',
@@ -42,10 +38,24 @@ def process_coupling_type(coupling_type):
         verbose=10
     )
     model.fit(X_train, y_train)
+    return model
+
+
+def get_feature_importances(model, X_train):
+    return (pd.Series(dict(zip(X_train.columns,
+                               model.feature_importances_)))
+            .sort_values(ascending=False))
+
+
+def process_coupling_type(coupling_type):
+    train = load_partitions('train', coupling_type)
+    y_train = train['scalar_coupling_constant']
+    X_train = train.drop(['scalar_coupling_constant'], axis=1)
+
+    model = train_model(X_train, y_train)
+
     print(
-        pd.Series(dict(zip(X_train.columns,
-                           model.feature_importances_)))
-            .sort_values(ascending=False)
+        get_feature_importances(model, X_train)
             .head(20)
             .round(4)
     )
@@ -59,5 +69,6 @@ def process_coupling_type(coupling_type):
 
     for i, y in zip(X_test.index, y_pred):
         yield {'id': i, 'scalar_coupling_constant': round(y, 5)}
+
 
 __name__ == '__main__' and main()

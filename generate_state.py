@@ -46,7 +46,7 @@ def process_partition(index):
     structures = pd.read_pickle(f'data/partitions/structures/{index}.p')
     molecules = []
     for name, molecule_df in structures.groupby('molecule_name'):
-        molecules.append(compute_molecule(molecule_df, name))
+        molecules.append(compute_molecule(name, molecule_df))
 
     path = f'data/partitions/molecules/{index}.p'
     dr = os.path.dirname(path)
