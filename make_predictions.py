@@ -1,4 +1,3 @@
-import pickle
 from glob import glob
 
 import pandas as pd
@@ -19,11 +18,18 @@ def main():
 
 def load_partitions(name, coupling_type):
     print('loading', name, coupling_type)
-    return pd.concat(
+    features = pd.concat(
         [pd.read_pickle(path)
          for path in
          tqdm(glob(f'data/partitions/features/{name}/{coupling_type}/*.p'))],
         axis=0).fillna(0.0).set_index('id')
+    if '1J' in coupling_type:
+        # drop redundant features for 1J since there is only one bond
+        features = features.drop(['a0_bond_length', 'a1_bond_length',
+                                  'bond_path_length', 'bond_vector_dot',
+                                  'bond_vector_dot_norm'],
+                                 axis=1)
+    return features
 
 
 def train_model(X_train, y_train):
