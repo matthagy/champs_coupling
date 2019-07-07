@@ -5,6 +5,9 @@ from time import sleep
 from tqdm import tqdm
 
 
+COUPLING_TYPES = ['1JHC', '1JHN', '2JHC', '2JHH', '2JHN', '3JHC', '3JHH', '3JHN']
+
+
 def mp_map(func, args):
     with mp.Pool() as pool:
         futures = [pool.apply_async(func, args_i) for args_i in args]
