@@ -30,20 +30,23 @@ def compute_bonds(molecule):
             print(f'bad number of bonds {ai.n_bonds} for {i} in {molecule.name} {ai.atom_type.symbol}')
 
 
+def compute_molecule(name, molecule_df):
+    molecule_df = molecule_df.set_index('atom_index').sort_index()
+    atoms = []
+    for atom_index, atom_row in molecule_df.iterrows():
+        atom_type = atom_type_by_symbol[atom_row['atom']]
+        position = np.array([atom_row['x'], atom_row['y'], atom_row['z']])
+        atom = Atom(atom_type, position)
+        atoms.append(atom)
+    molecule = Molecule(name, atoms)
+    compute_bonds(molecule)
+    return molecule
+
 def process_partition(index):
     structures = pd.read_pickle(f'data/partitions/structures/{index}.p')
     molecules = []
     for name, molecule_df in structures.groupby('molecule_name'):
-        molecule_df = molecule_df.set_index('atom_index').sort_index()
-        atoms = []
-        for atom_index, atom_row in molecule_df.iterrows():
-            atom_type = atom_type_by_symbol[atom_row['atom']]
-            position = np.array([atom_row['x'], atom_row['y'], atom_row['z']])
-            atom = Atom(atom_type, position)
-            atoms.append(atom)
-        molecule = Molecule(name, atoms)
-        compute_bonds(molecule)
-        molecules.append(molecule)
+        molecules.append(compute_molecule(molecule_df, name))
 
     path = f'data/partitions/molecules/{index}.p'
     dr = os.path.dirname(path)
