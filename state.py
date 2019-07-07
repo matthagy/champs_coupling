@@ -103,7 +103,7 @@ class Atom(StateBase):
                        for a1, a2 in self.secondary_neighbors)
 
     @property
-    def cycles(self, max_depth=8):
+    def cycles(self, max_depth=6):
         def rec(path):
             for next in path[-1].bonded_neighbors:
                 if next is self and len(path) > 2:
