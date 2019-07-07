@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from util import COUPLING_TYPES
-from make_predictions import load_partitions, train_model, get_feature_importances
+from make_predictions import load_partitions, train_model, get_feature_importances, drop_low_frequency_cycle_columns
 
 
 def main():
@@ -17,6 +17,7 @@ def main():
 def process_coupling_type(coupling_type):
     print('coupling_type', coupling_type)
     features = load_partitions('train', coupling_type)
+    features = drop_low_frequency_cycle_columns(features)
     features = features.sample(frac=1)  # shuffle
 
     n_train = int(0.8 * len(features))

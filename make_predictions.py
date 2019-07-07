@@ -30,13 +30,15 @@ def load_partitions(name, coupling_type):
                                   'bond_vector_dot_norm'],
                                  axis=1)
 
-    # drop low frequency cycles
+    return features
+
+
+def drop_low_frequency_cycle_columns(features):
     cycle_columns = [c for c in features.columns if '_cyc_' in c]
     cycle_counts = features[cycle_columns].sum(axis=0)
     low_frequency_cycle_columns = cycle_counts[cycle_counts < 50].index
     print('dropping', len(low_frequency_cycle_columns), 'low frequency cycle columns')
     features = features.drop(low_frequency_cycle_columns, axis=1)
-
     return features
 
 
@@ -63,16 +65,16 @@ def get_feature_importances(model, X_train):
 
 def process_coupling_type(coupling_type):
     train = load_partitions('train', coupling_type)
+    train = drop_low_frequency_cycle_columns(train)
+
     y_train = train['scalar_coupling_constant']
     X_train = train.drop(['scalar_coupling_constant'], axis=1)
 
     model = train_model(X_train, y_train)
 
-    print(
-        get_feature_importances(model, X_train)
-            .head(20)
-            .round(4)
-    )
+    print(get_feature_importances(model, X_train)
+          .head(20)
+          .round(4))
 
     X_test = load_partitions('test', coupling_type)
     for column in (set(X_train.columns) - set(X_test.columns)):
