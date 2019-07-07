@@ -3,11 +3,19 @@ from collections import Counter
 import numpy as np
 
 
-class AtomType:
+class StateBase:
+    def __repr__(self):
+        return f'{self.__class__.__name__}({str(self)})'
+
+
+class AtomType(StateBase):
     def __init__(self, symbol: str, atomic_number: int, atomic_weight: float):
         self.symbol = symbol
         self.atomic_number = atomic_number
         self.atomic_weight = atomic_weight
+
+    def __str__(self):
+        return self.symbol
 
 
 ATOM_TYPES = [
@@ -54,13 +62,16 @@ def distance(a: np.ndarray, b: np.ndarray) -> float:
     return length(a - b)
 
 
-class Atom:
+class Atom(StateBase):
     __slots__ = 'atom_type', 'position', 'bonds'
 
     def __init__(self, atom_type: AtomType, position: np.ndarray):
         self.atom_type = atom_type
         self.position = position
         self.bonds = []
+
+    def __str__(self):
+        return self.hybrdized_symbol
 
     @property
     def n_bonds(self):
@@ -91,8 +102,19 @@ class Atom:
         return Counter((a1.hybrdized_symbol, a2.hybrdized_symbol)
                        for a1, a2 in self.secondary_neighbors)
 
+    @property
+    def cycles(self, max_depth=8):
+        def rec(path):
+            for next in path[-1].neighbors:
+                if next is self:
+                    yield path
+                if next not in path and len(path) < max_depth:
+                    yield from rec(path + (next,))
 
-class Bond:
+        yield from rec((self,))
+
+
+class Bond(StateBase):
     __slots__ = 'a', 'b'
 
     def __init__(self, a: Atom, b: Atom):
@@ -111,14 +133,20 @@ class Bond:
     def length(self) -> float:
         return distance(self.a.position, self.b.position)
 
+    def __str__(self):
+        return f'{self.a}|{self.b}'
 
-class Molecule:
+
+class Molecule(StateBase):
     __slots__ = 'name', 'atoms', '_molecular_weight'
 
     def __init__(self, name: str, atoms: list):
         self.name = name
         self.atoms = atoms
         self._molecular_weight = None
+
+    def __str__(self):
+        return self.hybridized_signature
 
     @property
     def molecular_weight(self):
