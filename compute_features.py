@@ -68,7 +68,7 @@ def compute_pair_features(row: pd.Series,
         cycles = Counter(','.join([a.hybridized_symbol for a in cycle])
                          for cycle in atom.cycles)
         for cycle, n in cycles.items():
-            features[prefix + '_cyc_' + cycle] += 1
+            features[prefix + '_cyc_' + cycle] = n
 
     for prefix, bonds in [('b0', a0.bonded_neighbors_count),
                           ('b1', a1.bonded_neighbors_count)]:
