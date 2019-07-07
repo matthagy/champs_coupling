@@ -32,7 +32,7 @@ def load_partitions(name, coupling_type):
 
     # drop low frequency cycles
     cycle_columns = [c for c in features.columns if '_cyc_' in c]
-    cycle_counts = features[cycle_columns].sum(axis=1)
+    cycle_counts = features[cycle_columns].sum(axis=0)
     low_frequency_cycle_columns = cycle_counts[cycle_counts < 50].index
     print('dropping', len(low_frequency_cycle_columns), 'low frequency cycle columns')
     features = features.drop(low_frequency_cycle_columns, axis=1)
