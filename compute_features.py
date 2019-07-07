@@ -108,7 +108,7 @@ def find_shortest_path_between_atoms(atom_source: Atom,
         next_atom = prev_bonds[-1].other(prev_atom)
         if next_atom is atom_target:
             return prev_bonds
-        else:
+        elif len(prev_bonds) < 5: # don't recurse too deeply
             for next_bond in next_atom.bonds:
                 if next_bond.other(next_atom) is not prev_atom:
                     bonds_to_explore.append((next_atom,
