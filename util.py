@@ -1,4 +1,3 @@
-
 import multiprocessing as mp
 from multiprocessing.pool import ApplyResult
 from time import sleep
@@ -21,3 +20,8 @@ def mp_map(func, args):
                         new_futures.append(future)
                 futures = new_futures
                 sleep(0.25)
+
+
+def mp_map_parititons(func):
+    from partition_by_molecule import N_PARTITIONS
+    mp_map(func, ((partition_index,) for partition_index in range(N_PARTITIONS)))

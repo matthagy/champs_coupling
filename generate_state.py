@@ -1,12 +1,12 @@
+import os
+import os.path
 import pickle
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 
-from util import mp_map
 from state import ATOM_TYPES, BOND_LENGTH_THRESHOLDS, ALLOWED_BONDS_COUNT, Atom, Bond, Molecule
-from partition_by_molecule import N_PARTITIONS
+from util import mp_map_parititons
 
 atom_type_by_symbol = {atom_type.symbol: atom_type for atom_type in ATOM_TYPES}
 
@@ -30,10 +30,10 @@ def compute_bonds(molecule):
             print(f'bad number of bonds {ai.n_bonds} for {i} in {molecule.name} {ai.atom_type.symbol}')
 
 
-def main():
-    structures = pd.read_csv('data/structures.csv')
+def process_partition(index):
+    structures = pd.read_pickle(f'data/partitions/structures/{index}.p')
     molecules = []
-    for name, molecule_df in tqdm(structures.groupby('molecule_name')):
+    for name, molecule_df in structures.groupby('molecule_name'):
         molecule_df = molecule_df.set_index('atom_index').sort_index()
         atoms = []
         for atom_index, atom_row in molecule_df.iterrows():
@@ -45,8 +45,17 @@ def main():
         compute_bonds(molecule)
         molecules.append(molecule)
 
-    with open('data/molecules.p', 'wb') as fp:
+    path = f'data/partitions/molecules/{index}.p'
+    dr = os.path.dirname(path)
+    if not os.path.exists(dr):
+        os.makedirs(dr, exist_ok=True)
+
+    with open(path, 'wb') as fp:
         pickle.dump(molecules, fp)
+
+
+def main():
+    mp_map_parititons(process_partition)
 
 
 __name__ == '__main__' and main()
