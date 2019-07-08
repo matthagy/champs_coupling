@@ -102,7 +102,6 @@ class Atom(StateBase):
         return Counter((a1.hybridized_symbol, a2.hybridized_symbol)
                        for a1, a2 in self.secondary_neighbors)
 
-    @property
     def cycles(self, max_depth=6):
         def rec(path):
             for next in path[-1].bonded_neighbors:
