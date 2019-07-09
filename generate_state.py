@@ -4,6 +4,8 @@ import pickle
 
 import numpy as np
 import pandas as pd
+import openbabel
+
 
 from state import ATOM_TYPES, BOND_LENGTH_THRESHOLDS, ALLOWED_BONDS_COUNT, Atom, Bond, Molecule
 from util import mp_map_parititons
@@ -11,7 +13,7 @@ from util import mp_map_parititons
 atom_type_by_symbol = {atom_type.symbol: atom_type for atom_type in ATOM_TYPES}
 
 
-def compute_bonds(molecule):
+def compute_bonds(molecule: Molecule):
     atoms = molecule.atoms
     for i, ai in enumerate(atoms):
         for j in range(i + 1, len(atoms)):
@@ -30,6 +32,29 @@ def compute_bonds(molecule):
             print(f'bad number of bonds {ai.n_bonds} for {i} in {molecule.name} {ai.atom_type.symbol}')
 
 
+def compute_partial_charges(molecule: Molecule):
+    ob_mol = openbabel.OBMol()
+    ob_atoms = []
+    for atom in molecule.atoms:
+        ob_atom = ob_mol.NewAtom()
+        ob_atom.SetAtomicNum(atom.atom_type.atomic_number)
+        ob_atoms.append(ob_atom)
+
+    bonds = {b for a in molecule.atoms for b in a.bonds}
+    for bond in bonds:
+        ob_a1 = ob_atoms[molecule.atoms.index(bond.a)]
+        ob_a2 = ob_atoms[molecule.atoms.index(bond.b)]
+        ob_bond = ob_mol.NewBond()
+        ob_bond.SetBegin(ob_a1)
+        ob_bond.SetEnd(ob_a2)
+
+    charge_model = openbabel.OBChargeModel.FindType("gasteiger")
+    charge_model.ComputeCharges(ob_mol)
+
+    for atom, ob_atom in zip(molecule.atoms, ob_atoms):
+        atom.partial_charge = ob_atom.GetPartialCharge()
+
+
 def compute_molecule(name, molecule_df):
     molecule_df = molecule_df.set_index('atom_index').sort_index()
     atoms = []
@@ -39,8 +64,12 @@ def compute_molecule(name, molecule_df):
         atom = Atom(atom_type, position)
         atoms.append(atom)
     molecule = Molecule(name, atoms)
+
     compute_bonds(molecule)
+    compute_partial_charges(molecule)
+
     return molecule
+
 
 def process_partition(index):
     structures = pd.read_pickle(f'data/partitions/structures/{index}.p')

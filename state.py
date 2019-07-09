@@ -63,12 +63,13 @@ def distance(a: np.ndarray, b: np.ndarray) -> float:
 
 
 class Atom(StateBase):
-    __slots__ = 'atom_type', 'position', 'bonds'
+    __slots__ = 'atom_type', 'position', 'bonds', 'partial_charge'
 
     def __init__(self, atom_type: AtomType, position: np.ndarray):
         self.atom_type = atom_type
         self.position = position
         self.bonds = []
+        self.partial_charge = None
 
     def __str__(self):
         return self.hybridized_symbol
