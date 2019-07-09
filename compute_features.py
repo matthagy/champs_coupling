@@ -58,12 +58,11 @@ def compute_pair_features(row: pd.Series,
     a1: Atom = molecule.atoms[row['atom_index_1']]
 
     features = {'distance': distance(a0.position, a1.position),
-                'molecular_weight': molecule.molecular_weight,
-                'a0_bonds': a0.n_bonds,
-                'a1_bonds': a1.n_bonds}
+                'molecular_weight': molecule.molecular_weight}
 
     for prefix, atom in [('a0', a0), ('a1', a1)]:
         features[prefix + '_bonds'] = atom.n_bonds
+        features[prefix + '_partial_charge'] = atom.partial_charge
 
         cycles = Counter(','.join([a.hybridized_symbol for a in cycle])
                          for cycle in atom.cycles())
